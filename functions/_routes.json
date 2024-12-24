@@ -1,16 +1,15 @@
 {
   "version": 1,
-  "include": ["/v1/*"],
+  "include": ["/*"],
   "exclude": [],
-  "base": "/",
   "routes": [
     {
-      "pattern": "/v1/models",
-      "methods": ["GET", "HEAD", "OPTIONS"]
+      "pattern": "^/v1/chat/completions$",
+      "methods": ["POST", "OPTIONS"]
     },
     {
-      "pattern": "/v1/chat/completions",
-      "methods": ["POST", "HEAD", "OPTIONS"]
+      "pattern": "^/v1/models$",
+      "methods": ["GET", "OPTIONS"]
     }
   ]
 }

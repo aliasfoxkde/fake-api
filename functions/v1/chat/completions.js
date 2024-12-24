@@ -1,6 +1,37 @@
 export async function onRequest(context) {
   const { request } = context;
 
+  // Handle CORS preflight
+  if (request.method === 'OPTIONS') {
+    return new Response(null, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Max-Age': '86400',
+      }
+    });
+  }
+
+  // Only allow POST method
+  if (request.method !== 'POST') {
+    return new Response(JSON.stringify({
+      error: {
+        message: "Method not allowed. Please use POST.",
+        type: "invalid_request_error",
+        param: null,
+        code: "method_not_allowed"
+      }
+    }), {
+      status: 405,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Allow': 'POST, OPTIONS'
+      }
+    });
+  }
+
   // Verify API key
   const authHeader = request.headers.get('authorization');
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -135,15 +166,17 @@ export async function onRequest(context) {
 
     // Handle non-streaming response
     const timestamp = Date.now();
+    // Format response to exactly match OpenAI's API
     const responseObj = {
       id: `chatcmpl-${timestamp}`,
       object: 'chat.completion',
       created: Math.floor(timestamp / 1000),
       model: 'claude-3-5-sonnet',
+      system_fingerprint: "fp_" + timestamp,
       usage: {
-        prompt_tokens: content.length,
-        completion_tokens: response.length,
-        total_tokens: content.length + response.length
+        prompt_tokens: Math.ceil(content.length / 4),
+        completion_tokens: Math.ceil(response.length / 4),
+        total_tokens: Math.ceil((content.length + response.length) / 4)
       },
       choices: [{
         message: {
@@ -151,7 +184,8 @@ export async function onRequest(context) {
           content: response
         },
         finish_reason: 'stop',
-        index: 0
+        index: 0,
+        logprobs: null
       }]
     };
 
@@ -177,15 +211,4 @@ export async function onRequest(context) {
       }
     });
   }
-}
-
-// Handle CORS preflight
-export async function onRequestOptions() {
-  return new Response(null, {
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    }
-  });
 }

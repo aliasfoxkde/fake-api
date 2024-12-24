@@ -69,30 +69,37 @@ export async function onRequest(context) {
     });
   }
 
+  const timestamp = Math.floor(Date.now() / 1000);
   const responseObj = {
     object: "list",
     data: [
       {
         id: "claude-3-5-sonnet",
         object: "model",
-        created: 1677610602,
-        owned_by: "puter",
-        permission: [{
-          id: "modelperm-1234",
-          object: "model_permission",
-          created: 1677610602,
-          allow_create_engine: false,
-          allow_sampling: true,
-          allow_logprobs: true,
-          allow_search_indices: false,
-          allow_view: true,
-          allow_fine_tuning: false,
-          organization: "*",
-          group: null,
-          is_blocking: false
-        }],
-        root: "claude-3-5-sonnet",
-        parent: null
+        created: timestamp,
+        owned_by: "anthropic",
+        permission: [
+          {
+            id: `modelperm-${timestamp}`,
+            object: "model_permission",
+            created: timestamp,
+            allow_create_engine: false,
+            allow_sampling: true,
+            allow_logprobs: true,
+            allow_search_indices: false,
+            allow_view: true,
+            allow_fine_tuning: false,
+            organization: "*",
+            group: null,
+            is_blocking: false
+          }
+        ],
+        root: null,
+        parent: null,
+        pricing: {
+          prompt: "0.0000",
+          completion: "0.0000"
+        }
       }
     ]
   };
@@ -103,6 +110,9 @@ export async function onRequest(context) {
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Max-Age': '86400'
       }
     });
   }
@@ -112,6 +122,9 @@ export async function onRequest(context) {
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '86400'
     }
   });
 }
