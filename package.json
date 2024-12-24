@@ -1,18 +1,18 @@
 {
   "name": "sonnet-api",
   "version": "1.0.0",
+  "private": true,
   "type": "module",
-  "description": "OpenAI-compatible API endpoint for Puter AI",
-  "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "wrangler pages dev --compatibility-date=2024-01-01 .",
+    "build": "echo 'No build step required'",
+    "deploy": "wrangler pages deploy --project-name sonnet-api .",
+    "start": "npm run dev"
   },
-  "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5"
+  "devDependencies": {
+    "wrangler": "^3.28.0"
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=16.13.0"
   }
 }
