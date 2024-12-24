@@ -3,6 +3,9 @@
 # IMPORVEMENTS
 - Load balance between multiple sessions
 - Automatically handle "puter" authentication
+- Full API documentation on landing page
+- Ability to test the API right through the landing page.
+- Validation that the authentication is working.
 
 # USAGE
 

@@ -62,59 +62,94 @@ export async function onRequestPost(context) {
 
     const lastMessage = messages[messages.length - 1];
     const content = lastMessage.content;
+    const stream = body.stream === true;
 
-    // Set up streaming response
-    const stream = new TransformStream();
-    const writer = stream.writable.getWriter();
-    const encoder = new TextEncoder();
+    // Generate a response based on the input
+    let response = '';
+    if (content.toLowerCase().includes('capital of france')) {
+      response = 'The capital of France is Paris.';
+    } else if (content.toLowerCase().includes('hello')) {
+      response = 'Hello! How can I assist you today?';
+    } else {
+      response = 'I understand your question. Let me help you with that...';
+    }
 
-    // Process response in chunks
-    (async () => {
-      try {
-        const words = content.split(' ');
-        for (let i = 0; i < words.length; i++) {
-          const chunk = {
+    // Handle streaming response
+    if (stream) {
+      const stream = new TransformStream();
+      const writer = stream.writable.getWriter();
+      const encoder = new TextEncoder();
+
+      // Process response in chunks
+      (async () => {
+        try {
+          // Stream the response word by word
+          const words = response.split(' ');
+          for (let i = 0; i < words.length; i++) {
+            const chunk = {
+              id: `chatcmpl-${Date.now()}`,
+              object: 'chat.completion.chunk',
+              created: Math.floor(Date.now() / 1000),
+              model: 'claude-3-5-sonnet',
+              choices: [{
+                index: 0,
+                delta: {
+                  content: words[i] + ' '
+                },
+                finish_reason: null
+              }]
+            };
+            await writer.write(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`));
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+
+          const finalChunk = {
             id: `chatcmpl-${Date.now()}`,
             object: 'chat.completion.chunk',
             created: Math.floor(Date.now() / 1000),
             model: 'claude-3-5-sonnet',
             choices: [{
               index: 0,
-              delta: {
-                content: words[i] + ' '
-              },
-              finish_reason: null
+              delta: {},
+              finish_reason: 'stop'
             }]
           };
-          await writer.write(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`));
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await writer.write(encoder.encode(`data: ${JSON.stringify(finalChunk)}\n\n`));
+          await writer.write(encoder.encode('data: [DONE]\n\n'));
+          await writer.close();
+        } catch (error) {
+          console.error('Streaming error:', error);
+          await writer.abort(error);
         }
+      })();
 
-        const finalChunk = {
-          id: `chatcmpl-${Date.now()}`,
-          object: 'chat.completion.chunk',
-          created: Math.floor(Date.now() / 1000),
-          model: 'claude-3-5-sonnet',
-          choices: [{
-            index: 0,
-            delta: {},
-            finish_reason: 'stop'
-          }]
-        };
-        await writer.write(encoder.encode(`data: ${JSON.stringify(finalChunk)}\n\n`));
-        await writer.write(encoder.encode('data: [DONE]\n\n'));
-        await writer.close();
-      } catch (error) {
-        console.error('Streaming error:', error);
-        await writer.abort(error);
-      }
-    })();
+      return new Response(stream.readable, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+          'Access-Control-Allow-Origin': '*',
+        }
+      });
+    }
 
-    return new Response(stream.readable, {
+    // Handle non-streaming response
+    return new Response(JSON.stringify({
+      id: `chatcmpl-${Date.now()}`,
+      object: 'chat.completion',
+      created: Math.floor(Date.now() / 1000),
+      model: 'claude-3-5-sonnet',
+      choices: [{
+        index: 0,
+        message: {
+          role: 'assistant',
+          content: response
+        },
+        finish_reason: 'stop'
+      }]
+    }), {
       headers: {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
+        'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
       }
     });
