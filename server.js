@@ -39,8 +39,13 @@ const authenticateKey = (req, res, next) => {
     next();
 };
 
+// Handle root path
+app.get('/', (req, res) => {
+    res.sendFile('index.html', { root: '.' });
+});
+
 // Models endpoint - handle both paths for compatibility
-app.get(['/api/v1/models', '/v1/models'], authenticateKey, (req, res) => {
+app.get(['/api/v1/models', '/v1/models', '/models'], authenticateKey, (req, res) => {
     res.json({
         data: [
             {
@@ -71,7 +76,7 @@ app.get(['/api/v1/models', '/v1/models'], authenticateKey, (req, res) => {
 });
 
 // Chat completions endpoint - handle both paths for compatibility
-app.post(['/api/v1/chat/completions', '/v1/chat/completions'], authenticateKey, async (req, res) => {
+app.post(['/api/v1/chat/completions', '/v1/chat/completions', '/chat/completions'], authenticateKey, async (req, res) => {
     try {
         const { messages } = req.body;
         if (!messages || !Array.isArray(messages)) {
@@ -142,8 +147,39 @@ app.post(['/api/v1/chat/completions', '/v1/chat/completions'], authenticateKey, 
     }
 });
 
+// Error handler middleware
+app.use((err, req, res, next) => {
+    console.error('Error:', err);
+    res.status(500).json({
+        error: {
+            message: err.message || "Internal server error occurred",
+            type: "internal_error",
+            param: null,
+            code: "internal_error"
+        }
+    });
+});
+
+// Handle 404
+app.use((req, res) => {
+    res.status(404).json({
+        error: {
+            message: "Not found",
+            type: "invalid_request_error",
+            param: null,
+            code: "resource_not_found"
+        }
+    });
+});
+
 // Serve static files
-app.use(express.static('.'));
+app.use(express.static('.', {
+    setHeaders: (res, path) => {
+        if (path.endsWith('.html')) {
+            res.setHeader('Content-Type', 'text/html');
+        }
+    }
+}));
 
 const PORT = 3000;
 httpServer.listen(PORT, () => {
