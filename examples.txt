@@ -1,0 +1,42 @@
+// Chat with GPT-4o mini (default)
+puter.ai.chat(`What is life?`).then(puter.print);
+
+// Chat with GPT-4 Vision
+puter.ai.chat(`What do you see?`, `https://assets.puter.site/doge.jpeg`).then(puter.print);
+
+grok-beta
+(async () => {
+    const resp = await puter.ai.chat('What is Elon Musks current net worth?', {model: 'grok-beta', stream: true });
+    for await ( const part of resp ) puter.print(part?.text?.replaceAll('\n', '<br>'));
+})();
+
+claude
+(async () => {
+    const resp = await puter.ai.chat('Tell me in detail what Rick and Morty is all about.', {model: 'claude', stream: true });
+    for await ( const part of resp ) puter.print(part?.text?.replaceAll('\n', '<br>'));
+    })();
+
+// Extract text from an image
+puter.ai.img2txt('https://cdn.handwrytten.com/www/2020/02/home-hero-photo2%402x.png').then(puter.print);
+
+// Convert text to speech
+puter.ai.txt2speech(`Hello world! Puter is pretty amazing, don't you agree?`).then((audio)=>{
+    audio.play();
+});
+
+Authentication Example:
+<html>
+<body>
+    <script src="https://js.puter.com/v2/"></script>
+    <button id="sign-in">Sign in</button>
+    <script>
+        // Because signIn() opens a popup window, it must be called from a user action.
+        document.getElementById('sign-in').addEventListener('click', async () => {
+            // signIn() will resolve when the user has signed in.
+            await puter.auth.signIn().then((res) => {
+                puter.print('Signed in<br>' + JSON.stringify(res));
+            });
+        });
+    </script>
+</body>
+</html>
