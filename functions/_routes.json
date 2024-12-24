@@ -6,11 +6,11 @@
   "routes": [
     {
       "pattern": "/v1/models",
-      "methods": ["GET", "OPTIONS"]
+      "methods": ["GET", "HEAD", "OPTIONS"]
     },
     {
       "pattern": "/v1/chat/completions",
-      "methods": ["POST", "OPTIONS"]
+      "methods": ["POST", "HEAD", "OPTIONS"]
     }
   ]
 }

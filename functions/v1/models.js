@@ -1,5 +1,35 @@
-export async function onRequestGet(context) {
+export async function onRequest(context) {
   const { request } = context;
+
+  // Handle CORS preflight
+  if (request.method === 'OPTIONS') {
+    return new Response(null, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+      }
+    });
+  }
+
+  // Only allow GET requests
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    return new Response(JSON.stringify({
+      error: {
+        message: "Method not allowed",
+        type: "invalid_request_error",
+        param: null,
+        code: "method_not_allowed"
+      }
+    }), {
+      status: 405,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Allow': 'GET, HEAD, OPTIONS'
+      }
+    });
+  }
 
   // Verify API key
   const authHeader = request.headers.get('authorization');
@@ -39,7 +69,8 @@ export async function onRequestGet(context) {
     });
   }
 
-  return new Response(JSON.stringify({
+  const responseObj = {
+    object: "list",
     data: [
       {
         id: "claude-3-5-sonnet",
@@ -63,9 +94,21 @@ export async function onRequestGet(context) {
         root: "claude-3-5-sonnet",
         parent: null
       }
-    ],
-    object: "list"
-  }), {
+    ]
+  };
+
+  // For HEAD requests, return just headers
+  if (request.method === 'HEAD') {
+    return new Response(null, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      }
+    });
+  }
+
+  // For GET requests, return full response
+  return new Response(JSON.stringify(responseObj), {
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
