@@ -134,20 +134,28 @@ export async function onRequestPost(context) {
     }
 
     // Handle non-streaming response
-    return new Response(JSON.stringify({
-      id: `chatcmpl-${Date.now()}`,
+    const timestamp = Date.now();
+    const responseObj = {
+      id: `chatcmpl-${timestamp}`,
       object: 'chat.completion',
-      created: Math.floor(Date.now() / 1000),
+      created: Math.floor(timestamp / 1000),
       model: 'claude-3-5-sonnet',
+      usage: {
+        prompt_tokens: content.length,
+        completion_tokens: response.length,
+        total_tokens: content.length + response.length
+      },
       choices: [{
-        index: 0,
         message: {
           role: 'assistant',
           content: response
         },
-        finish_reason: 'stop'
+        finish_reason: 'stop',
+        index: 0
       }]
-    }), {
+    };
+
+    return new Response(JSON.stringify(responseObj), {
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
