@@ -54,7 +54,8 @@
 
     <script>
         const API_KEY = 'sk-test-123456789'; // In a real app, this would be stored securely
-        const BASE_PATH = '/api';
+        // Support both path formats
+        const BASE_PATH = window.location.hostname === 'localhost' ? '/api' : '';
         const MODELS_ENDPOINT = `${BASE_PATH}/v1/models`;
         const CHAT_ENDPOINT = `${BASE_PATH}/v1/chat/completions`;
         
@@ -68,11 +69,18 @@
 
         // Helper function to handle API responses
         async function handleApiResponse(response) {
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data.error?.message || 'Unknown error occurred');
+            try {
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error?.message || 'Unknown error occurred');
+                }
+                return data;
+            } catch (error) {
+                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    throw new Error('Network error: Please check your connection and SSL certificate');
+                }
+                throw error;
             }
-            return data;
         }
 
         // Helper function to show errors
@@ -87,7 +95,7 @@
         async function fetchModels() {
             modelsDiv.textContent = 'Available Models: Loading...';
             try {
-                const response = await fetch(MODELS_ENDPOINT, {
+                const response = await fetch(window.location.protocol + '//' + window.location.host + MODELS_ENDPOINT, {
                     headers: {
                         'Authorization': `Bearer ${API_KEY}`
                     }
@@ -130,7 +138,7 @@
             outputDiv.textContent = '';
             
             try {
-                const response = await fetch(CHAT_ENDPOINT, {
+                const response = await fetch(window.location.protocol + '//' + window.location.host + CHAT_ENDPOINT, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

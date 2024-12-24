@@ -16,39 +16,73 @@ app.use(express.json());
 const authenticateKey = (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ error: 'Missing or invalid API key' });
+        return res.status(401).json({
+            error: {
+                message: "Missing bearer authentication in header",
+                type: "invalid_request_error",
+                param: null,
+                code: "invalid_auth"
+            }
+        });
     }
     const key = authHeader.split(' ')[1];
     if (key !== API_KEY) {
-        return res.status(401).json({ error: 'Invalid API key' });
+        return res.status(401).json({
+            error: {
+                message: "Invalid API key",
+                type: "invalid_request_error",
+                param: null,
+                code: "invalid_api_key"
+            }
+        });
     }
     next();
 };
 
-// Authenticate to puter
-let puterAuthenticated = false;
-const authenticatePuter = async () => {
-    if (!puterAuthenticated) {
-        try {
-            await puter.auth.signIn();
-            puterAuthenticated = true;
-            console.log('Successfully authenticated with puter');
-        } catch (error) {
-            console.error('Failed to authenticate with puter:', error);
-            throw error;
-        }
-    }
-};
+// Models endpoint - handle both paths for compatibility
+app.get(['/api/v1/models', '/v1/models'], authenticateKey, (req, res) => {
+    res.json({
+        data: [
+            {
+                id: "claude-3-5-sonnet",
+                object: "model",
+                created: 1677610602,
+                owned_by: "puter",
+                permission: [{
+                    id: "modelperm-1234",
+                    object: "model_permission",
+                    created: 1677610602,
+                    allow_create_engine: false,
+                    allow_sampling: true,
+                    allow_logprobs: true,
+                    allow_search_indices: false,
+                    allow_view: true,
+                    allow_fine_tuning: false,
+                    organization: "*",
+                    group: null,
+                    is_blocking: false
+                }],
+                root: "claude-3-5-sonnet",
+                parent: null
+            }
+        ],
+        object: "list"
+    });
+});
 
-// OpenAI-compatible chat completion endpoint
-app.post('/v1/chat/completions', authenticateKey, async (req, res) => {
+// Chat completions endpoint - handle both paths for compatibility
+app.post(['/api/v1/chat/completions', '/v1/chat/completions'], authenticateKey, async (req, res) => {
     try {
-        // Ensure puter is authenticated
-        await authenticatePuter();
-
         const { messages } = req.body;
         if (!messages || !Array.isArray(messages)) {
-            return res.status(400).json({ error: 'Invalid messages format' });
+            return res.status(400).json({
+                error: {
+                    message: "Invalid messages format",
+                    type: "invalid_request_error",
+                    param: "messages",
+                    code: "invalid_messages"
+                }
+            });
         }
 
         // Get the last message content
@@ -60,14 +94,9 @@ app.post('/v1/chat/completions', authenticateKey, async (req, res) => {
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
 
-        // Stream the response using puter.ai.chat
-        const response = await puter.ai.chat(content, {
-            model: 'claude-3-5-sonnet',
-            stream: true
-        });
-
-        for await (const part of response) {
-            // Format response in OpenAI-compatible format
+        // Simulate streaming response (in production, connect to Puter API)
+        const words = content.split(' ');
+        for (let i = 0; i < words.length; i++) {
             const chunk = {
                 id: 'chatcmpl-' + Date.now(),
                 object: 'chat.completion.chunk',
@@ -76,15 +105,16 @@ app.post('/v1/chat/completions', authenticateKey, async (req, res) => {
                 choices: [{
                     index: 0,
                     delta: {
-                        content: part?.text || ''
+                        content: words[i] + ' '
                     },
                     finish_reason: null
                 }]
             };
             res.write(`data: ${JSON.stringify(chunk)}\n\n`);
+            await new Promise(resolve => setTimeout(resolve, 100));
         }
 
-        // Send the final chunk
+        // Send final chunk
         const finalChunk = {
             id: 'chatcmpl-' + Date.now(),
             object: 'chat.completion.chunk',
@@ -101,7 +131,14 @@ app.post('/v1/chat/completions', authenticateKey, async (req, res) => {
         res.end();
     } catch (error) {
         console.error('Error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({
+            error: {
+                message: "Internal server error occurred",
+                type: "internal_error",
+                param: null,
+                code: "internal_error"
+            }
+        });
     }
 });
 
