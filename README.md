@@ -1,5 +1,9 @@
 # README
 
+# IMPORVEMENTS
+- Load balance between multiple sessions
+- Automatically handle "puter" authentication
+
 # USAGE
 
 ## Without auth

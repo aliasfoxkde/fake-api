@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "include": ["/v1/*"],
+  "exclude": [],
+  "base": "/",
+  "routes": [
+    {
+      "pattern": "/v1/models",
+      "methods": ["GET", "OPTIONS"]
+    },
+    {
+      "pattern": "/v1/chat/completions",
+      "methods": ["POST", "OPTIONS"]
+    }
+  ]
+}

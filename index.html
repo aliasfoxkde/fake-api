@@ -1,223 +1,87 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>OpenAI-Compatible Chat API Demo</title>
-    <script src="https://js.puter.com/v2/"></script>
+    <title>OpenAI-Compatible API</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             max-width: 800px;
-            margin: 20px auto;
+            margin: 40px auto;
             padding: 0 20px;
+            line-height: 1.6;
         }
-        #output {
-            white-space: pre-wrap;
-            margin-top: 20px;
-            padding: 10px;
-            border: 1px solid #ccc;
+        pre {
+            background: #f6f8fa;
+            padding: 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+        code {
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+        }
+        .endpoint {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+        }
+        .method {
+            display: inline-block;
+            padding: 4px 8px;
             border-radius: 4px;
-            min-height: 200px;
+            font-weight: bold;
+            margin-right: 8px;
         }
-        #status {
-            color: #666;
-            margin-bottom: 10px;
-        }
-        #error {
-            color: #dc3545;
-            margin: 10px 0;
-            display: none;
-            padding: 10px;
-            background-color: #ffe6e6;
-            border-radius: 4px;
-        }
-        button {
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
+        .get { background: #e3f2fd; }
+        .post { background: #e8f5e9; }
     </style>
 </head>
 <body>
-    <h1>OpenAI-Compatible Chat API Demo</h1>
-    <div id="status">Status: Not authenticated</div>
-    <div id="error"></div>
-    <button id="auth-button">Authenticate with Puter</button>
-    <div id="models" style="margin: 20px 0;">Available Models: Loading...</div>
-    <div id="output"></div>
+    <h1>OpenAI-Compatible API</h1>
+    <p>This API provides OpenAI-compatible endpoints for AI model access.</p>
 
-    <script>
-        const API_KEY = 'sk-test-123456789';
-        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        const BASE_PATH = isLocal ? '/api/v1' : '/v1';
-        const MODELS_ENDPOINT = `${BASE_PATH}/models`;
-        const CHAT_ENDPOINT = `${BASE_PATH}/chat/completions`;
-        
-        const statusDiv = document.getElementById('status');
-        const errorDiv = document.getElementById('error');
-        const outputDiv = document.getElementById('output');
-        const authButton = document.getElementById('auth-button');
-        const modelsDiv = document.getElementById('models');
-        
-        let puterAuthenticated = false;
+    <div class="endpoint">
+        <h2><span class="method get">GET</span>/v1/models</h2>
+        <p>Lists the available models.</p>
+        <h4>Example Request:</h4>
+        <pre><code>curl https://api.cyopsys.com/v1/models \
+  -H "Authorization: Bearer sk-test-123456789"</code></pre>
+    </div>
 
-        // Helper function to handle API responses
-        async function handleApiResponse(response) {
-            const contentType = response.headers.get('content-type');
-            if (!response.ok) {
-                let errorMessage = 'Request failed';
-                try {
-                    if (contentType && contentType.includes('application/json')) {
-                        const data = await response.json();
-                        errorMessage = data.error?.message || 'Unknown error occurred';
-                    } else {
-                        errorMessage = await response.text() || 'Unknown error occurred';
-                    }
-                } catch (e) {
-                    errorMessage = `Failed to parse error response: ${e.message}`;
-                }
-                throw new Error(errorMessage);
-            }
+    <div class="endpoint">
+        <h2><span class="method post">POST</span>/v1/chat/completions</h2>
+        <p>Creates a chat completion for the provided messages.</p>
+        <h4>Example Request:</h4>
+        <pre><code>curl https://api.cyopsys.com/v1/chat/completions \
+  -H "Authorization: Bearer sk-test-123456789" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "claude-3-5-sonnet",
+    "messages": [{"role": "user", "content": "Hello!"}],
+    "stream": true
+  }'</code></pre>
+    </div>
 
-            if (!contentType || !contentType.includes('application/json')) {
-                throw new Error('Invalid response type, expected JSON');
-            }
+    <h2>Authentication</h2>
+    <p>All API requests require authentication using a Bearer token in the Authorization header.</p>
+    <pre><code>Authorization: Bearer sk-test-123456789</code></pre>
 
-            try {
-                return await response.json();
-            } catch (error) {
-                throw new Error(`Failed to parse JSON response: ${error.message}`);
-            }
-        }
+    <h2>Using with OpenAI Clients</h2>
+    <pre><code>import OpenAI from 'openai';
 
-        // Helper function to show errors
-        function showError(message) {
-            console.error('Error:', message);
-            errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
-            setTimeout(() => {
-                errorDiv.style.display = 'none';
-            }, 5000);
-        }
+const openai = new OpenAI({
+  baseURL: 'https://api.cyopsys.com',
+  apiKey: 'sk-test-123456789'
+});
 
-        async function fetchModels() {
-            modelsDiv.textContent = 'Available Models: Loading...';
-            try {
-                const response = await fetch(MODELS_ENDPOINT, {
-                    headers: {
-                        'Authorization': `Bearer ${API_KEY}`,
-                        'Accept': 'application/json'
-                    }
-                });
-                
-                const data = await handleApiResponse(response);
-                if (data.data && Array.isArray(data.data)) {
-                    modelsDiv.textContent = 'Available Models: ' + data.data.map(model => model.id).join(', ');
-                } else {
-                    throw new Error('Invalid models response format');
-                }
-            } catch (error) {
-                console.error('Error fetching models:', error);
-                modelsDiv.textContent = 'Error loading models';
-                showError(error.message);
-                throw error;
-            }
-        }
+// List models
+const models = await openai.models.list();
 
-        async function authenticatePuter() {
-            try {
-                authButton.disabled = true;
-                await puter.auth.signIn();
-                puterAuthenticated = true;
-                statusDiv.textContent = 'Status: Authenticated';
-                authButton.style.display = 'none';
-                
-                // Fetch models after successful authentication
-                await fetchModels();
-                await streamResponse();
-            } catch (error) {
-                statusDiv.textContent = 'Status: Authentication failed';
-                authButton.disabled = false;
-                showError('Authentication failed: ' + error.message);
-                console.error('Authentication error:', error);
-            }
-        }
-
-        async function streamResponse() {
-            if (!puterAuthenticated) {
-                showError('Please authenticate first');
-                return;
-            }
-            
-            outputDiv.textContent = '';
-            
-            try {
-                const response = await fetch(CHAT_ENDPOINT, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${API_KEY}`,
-                        'Accept': 'text/event-stream'
-                    },
-                    body: JSON.stringify({
-                        model: 'claude-3-5-sonnet',
-                        messages: [
-                            { role: 'user', content: 'Write a detailed essay on the impact of artificial intelligence on society' }
-                        ],
-                        stream: true
-                    })
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error?.message || 'Stream request failed');
-                }
-
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-
-                while (true) {
-                    const { value, done } = await reader.read();
-                    if (done) break;
-
-                    const chunk = decoder.decode(value);
-                    const lines = chunk.split('\n');
-
-                    for (const line of lines) {
-                        if (line.startsWith('data: ')) {
-                            const data = line.slice(6);
-                            if (data === '[DONE]') break;
-
-                            try {
-                                const parsed = JSON.parse(data);
-                                const content = parsed.choices[0].delta.content;
-                                if (content) {
-                                    outputDiv.textContent += content;
-                                }
-                            } catch (e) {
-                                console.error('Error parsing chunk:', e);
-                            }
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                showError(error.message);
-                outputDiv.textContent = 'Error: ' + error.message;
-            }
-        }
-
-        // Set up authentication button
-        authButton.addEventListener('click', authenticatePuter);
-    </script>
+// Create chat completion
+const stream = await openai.chat.completions.create({
+  model: 'claude-3-5-sonnet',
+  messages: [{ role: 'user', content: 'Hello!' }],
+  stream: true
+});</code></pre>
 </body>
 </html>
