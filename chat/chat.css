@@ -1,0 +1,150 @@
+/* General Layout */
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f8f8;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+#chat-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    background-color: #fff;
+    border-top: 2px solid #ddd;
+    padding: 15px;
+    flex-grow: 1;
+    max-height: 80%;
+    overflow-y: auto;
+    position: relative;
+}
+
+#messages {
+    overflow-y: auto;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column-reverse;
+}
+
+.message {
+    display: inline-block;
+    max-width: 80%;
+    word-wrap: break-word;
+    margin: 5px 0;
+    border-radius: 15px;
+    padding: 10px 15px;
+    font-size: 14px;
+    line-height: 1.5;
+    position: relative;
+}
+
+.message.user {
+    background-color: #ddf2d2;
+    align-self: flex-start;
+}
+
+.message.ai {
+    background-color: #f0f0f0;
+    align-self: flex-end;
+}
+
+button {
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* Chat Input Styles */
+#input-container {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 10px;
+    justify-content: space-between;
+    position: sticky;
+    bottom: 0;
+    background-color: #fff;
+}
+
+#input-container input {
+    flex-grow: 1;
+    padding: 10px;
+    font-size: 14px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+#file-upload-btn {
+    background-color: transparent;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+#send-btn {
+    background-color: #007bff;
+}
+
+#menu-btn {
+    background-color: #333;
+    color: white;
+    font-size: 20px;
+}
+
+#left-menu {
+    position: fixed;
+    top: 0;
+    left: -250px;
+    width: 250px;
+    background-color: #fff;
+    height: 100%;
+    box-shadow: 2px 0px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    transition: left 0.3s ease;
+}
+
+.menu-item {
+    margin-bottom: 20px;
+}
+
+#theme-toggle {
+    padding: 10px;
+    cursor: pointer;
+    background-color: #333;
+    color: white;
+    border-radius: 5px;
+}
+
+/* Dark Mode Styles */
+.dark-mode {
+    background-color: #121212;
+    color: white;
+}
+
+.dark-mode #chat-container {
+    background-color: #333;
+    border-top: 2px solid #444;
+}
+
+.dark-mode .message.user {
+    background-color: #444;
+}
+
+.dark-mode .message.ai {
+    background-color: #555;
+}
