@@ -6,6 +6,14 @@
 - Full API documentation on landing page
 - Ability to test the API right through the landing page.
 - Validation that the authentication is working.
+- Add simple Chat interface UI (for testing, etc.)
+- Documentation
+  - Create nice landing page with basic info (link to github, etc.).
+  - Add JSON & Markdown formatting
+  - Add ability to API copy code snippets.
+  - Extract API Key and impliment basic security.
+  - Improve README.md documentation
+  - Add LICENSE
 
 # USAGE
 
